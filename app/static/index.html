@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tra cứu dữ liệu điểm mạng và vị trí hạ tầng.">
+    <title>Tra cứu điểm mạng</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="/" aria-label="Trang tra cứu điểm mạng">
+        <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="8" cy="18" r="4"></circle>
+          <circle cx="27" cy="8" r="4"></circle>
+          <circle cx="27" cy="28" r="4"></circle>
+          <path d="M11.5 16.2 23.5 9.8M11.5 19.8l12 6.4"></path>
+        </svg>
+        <span>
+          <strong>Fiber Agent</strong>
+          <small>Quản lý điểm mạng</small>
+        </span>
+      </a>
+      <div class="system-state" id="system-state" aria-live="polite">
+        <span class="state-dot"></span>
+        <span id="system-state-text">Đang kiểm tra hệ thống</span>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">Hạ tầng mạng</p>
+          <h1>Tra cứu điểm mạng</h1>
+          <p>Tìm theo mã điểm hoặc lọc danh sách theo thông tin vận hành.</p>
+        </div>
+        <div class="summary" aria-label="Thống kê kết quả">
+          <span id="summary-number">—</span>
+          <small id="summary-label">điểm phù hợp</small>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <aside class="query-panel" aria-label="Bộ lọc tra cứu">
+          <div class="panel-heading">
+            <h2>Bộ lọc</h2>
+            <button class="text-button" id="reset-button" type="button">Đặt lại</button>
+          </div>
+
+          <form id="filter-form">
+            <label class="field field-wide">
+              <span>Mã điểm</span>
+              <input id="ma-diem" name="ma_diem" type="search" autocomplete="off" placeholder="Ví dụ: STA000001">
+              <small>Nhập chính xác mã để mở nhanh chi tiết.</small>
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Loại điểm</span>
+                <select id="loai-diem" name="loai_diem">
+                  <option value="">Tất cả</option>
+                  <option value="Trạm">Trạm</option>
+                  <option value="Măng xông">Măng xông</option>
+                  <option value="POP khách hàng">POP khách hàng</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Trạng thái</span>
+                <select id="trang-thai" name="trang_thai">
+                  <option value="">Tất cả</option>
+                  <option value="Hoạt động">Hoạt động</option>
+                  <option value="Bảo trì">Bảo trì</option>
+                  <option value="Sự cố">Sự cố</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Thiết bị</span>
+                <select id="thiet-bi" name="thiet_bi">
+                  <option value="">Tất cả</option>
+                  <option value="Router">Router</option>
+                  <option value="Switch">Switch</option>
+                  <option value="OLT">OLT</option>
+                  <option value="ODF">ODF</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Mã tuyến</span>
+                <input id="ma-tuyen" name="ma_tuyen" type="text" autocomplete="off" placeholder="TUYEN-0001">
+              </label>
+
+              <label class="field field-wide">
+                <span>Tỉnh / thành phố</span>
+                <input id="tinh" name="tinh" type="text" autocomplete="off" placeholder="Ví dụ: Hải Phòng">
+              </label>
+            </div>
+
+            <button class="primary-button" type="submit">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg>
+              Tra cứu
+            </button>
+          </form>
+
+          <section class="quick-query" aria-labelledby="quick-query-title">
+            <div class="section-rule"></div>
+            <h2 id="quick-query-title">Hỏi nhanh dữ liệu</h2>
+            <p>Câu hỏi được đối chiếu trực tiếp với dữ liệu hệ thống.</p>
+            <form id="chat-form">
+              <label class="sr-only" for="chat-message">Câu hỏi</label>
+              <textarea id="chat-message" rows="3" maxlength="2000" placeholder="Có bao nhiêu Router?"></textarea>
+              <button class="secondary-button" type="submit" id="chat-submit">Gửi câu hỏi</button>
+            </form>
+            <div class="chat-answer" id="chat-answer" hidden aria-live="polite"></div>
+          </section>
+        </aside>
+
+        <section class="results-panel" aria-labelledby="results-title">
+          <div class="results-toolbar">
+            <div>
+              <h2 id="results-title">Danh sách điểm mạng</h2>
+              <p id="result-description">Đang tải dữ liệu…</p>
+            </div>
+            <label class="page-size">
+              <span>Hiển thị</span>
+              <select id="page-size" aria-label="Số dòng mỗi trang">
+                <option value="10">10 dòng</option>
+                <option value="20" selected>20 dòng</option>
+                <option value="50">50 dòng</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="notice" id="notice" hidden role="alert"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Điểm mạng</th>
+                  <th scope="col">Loại điểm</th>
+                  <th scope="col">Khu vực</th>
+                  <th scope="col">Tuyến</th>
+                  <th scope="col">Thiết bị</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col"><span class="sr-only">Thao tác</span></th>
+                </tr>
+              </thead>
+              <tbody id="results-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state" hidden>
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="18" r="10"></circle><path d="m25.5 25.5 8 8M36 15v12M30 21h12"></path></svg>
+              <h3>Không có điểm phù hợp</h3>
+              <p>Thử bỏ bớt một vài điều kiện lọc.</p>
+            </div>
+          </div>
+
+          <nav class="pagination" aria-label="Phân trang">
+            <p id="pagination-info">—</p>
+            <div>
+              <button id="previous-page" type="button" aria-label="Trang trước">Trước</button>
+              <span id="page-number">Trang 1</span>
+              <button id="next-page" type="button" aria-label="Trang sau">Sau</button>
+            </div>
+          </nav>
+        </section>
+      </div>
+    </main>
+
+    <dialog id="point-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Chi tiết điểm mạng</p>
+          <h2 id="dialog-title">—</h2>
+        </div>
+        <button class="icon-button" id="dialog-close" type="button" aria-label="Đóng">×</button>
+      </div>
+      <div class="dialog-body" id="dialog-body"></div>
+      <div class="dialog-footer">
+        <a id="map-link" class="secondary-button link-button" href="#" target="_blank" rel="noreferrer">Mở trên bản đồ</a>
+        <button class="primary-button compact" id="dialog-done" type="button">Đóng</button>
+      </div>
+    </dialog>
+  </body>
+</html>
