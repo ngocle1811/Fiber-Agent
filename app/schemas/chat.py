@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -70,5 +70,6 @@ class ChatResponseData(BaseModel):
 
     answer: str
     model: str
+    execution_path: Literal["direct_database", "agent"]
     tools_used: list[ToolExecutionInfo]
     timing: AgentTiming

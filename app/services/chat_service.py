@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.agent.agent_runner import AgentRunner
 from app.core.exceptions import AppException
 from app.core.logging_config import get_logger
+from app.services.fast_query_service import FastQueryService
 
 
 logger = get_logger(__name__)
@@ -20,7 +21,8 @@ class ChatService:
     """
 
     def __init__(self, db: Session):
-        self.agent_runner = AgentRunner(db)
+        self.db = db
+        self.fast_query_service = FastQueryService(db)
 
     def ask(self, message: str) -> dict[str, Any]:
         """
@@ -41,6 +43,14 @@ class ChatService:
             cleaned_message,
         )
 
-        return self.agent_runner.run(
+        fast_result = self.fast_query_service.try_answer(cleaned_message)
+        if fast_result is not None:
+            return fast_result
+
+        # Chỉ khởi tạo client LLM khi câu hỏi không đi được đường trực tiếp.
+        agent_runner = AgentRunner(self.db)
+        result = agent_runner.run(
             user_message=cleaned_message,
         )
+        result["execution_path"] = "agent"
+        return result

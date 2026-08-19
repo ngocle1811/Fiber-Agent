@@ -18,6 +18,9 @@ const elements = {
   chatMessage: document.querySelector("#chat-message"),
   chatSubmit: document.querySelector("#chat-submit"),
   chatAnswer: document.querySelector("#chat-answer"),
+  toolTrace: document.querySelector("#tool-trace"),
+  toolTraceSummary: document.querySelector("#tool-trace-summary"),
+  toolTraceContent: document.querySelector("#tool-trace-content"),
   dialog: document.querySelector("#point-dialog"),
   dialogTitle: document.querySelector("#dialog-title"),
   dialogBody: document.querySelector("#dialog-body"),
@@ -350,6 +353,9 @@ elements.chatForm.addEventListener("submit", async (event) => {
   elements.chatSubmit.disabled = true;
   elements.chatSubmit.textContent = "Đang đối chiếu…";
   elements.chatAnswer.hidden = false;
+  elements.toolTrace.hidden = true;
+  elements.toolTrace.open = false;
+  elements.toolTraceContent.replaceChildren();
   elements.chatAnswer.textContent = "Hệ thống đang truy vấn và đối chiếu dữ liệu, vui lòng chờ trong ít giây.";
 
   try {
@@ -359,6 +365,7 @@ elements.chatForm.addEventListener("submit", async (event) => {
     });
     const answer = payload.data.answer.replaceAll("**", "");
     const seconds = Math.max(0.1, payload.data.timing.total_ms / 1000).toFixed(1);
+    renderToolTrace(payload.data);
     elements.chatAnswer.textContent = `${answer}\n\nHoàn tất trong ${seconds} giây.`;
   } catch (error) {
     elements.chatAnswer.textContent = error.message;
@@ -367,6 +374,49 @@ elements.chatForm.addEventListener("submit", async (event) => {
     elements.chatSubmit.textContent = "Gửi câu hỏi";
   }
 });
+
+function renderToolTrace(data) {
+  const isDirect = data.execution_path === "direct_database";
+  const tools = Array.isArray(data.tools_used) ? data.tools_used : [];
+  const pathLabel = isDirect ? "Truy vấn trực tiếp" : "Agent";
+
+  elements.toolTraceSummary.textContent = `${pathLabel} • ${tools.length} tool`;
+
+  const overview = document.createElement("div");
+  overview.className = "trace-overview";
+  overview.textContent = isDirect
+    ? "Không gọi LLM; backend truy vấn dữ liệu trực tiếp."
+    : `Mô hình: ${data.model} • LLM: ${numberFormatter.format(data.timing.llm_ms)} ms`;
+  elements.toolTraceContent.append(overview);
+
+  tools.forEach((tool, index) => {
+    const item = document.createElement("div");
+    item.className = "trace-item";
+
+    const heading = document.createElement("div");
+    heading.className = "trace-item-heading";
+
+    const name = document.createElement("code");
+    name.textContent = `${index + 1}. ${tool.name}`;
+
+    const status = document.createElement("span");
+    status.className = `trace-status ${tool.success ? "success" : "failed"}`;
+    status.textContent = tool.success ? "Thành công" : "Thất bại";
+    heading.append(name, status);
+
+    const argumentsLine = document.createElement("code");
+    argumentsLine.className = "trace-arguments";
+    argumentsLine.textContent = JSON.stringify(tool.arguments || {});
+
+    const duration = document.createElement("small");
+    duration.textContent = `Thời gian tool: ${numberFormatter.format(tool.duration_ms)} ms`;
+
+    item.append(heading, argumentsLine, duration);
+    elements.toolTraceContent.append(item);
+  });
+
+  elements.toolTrace.hidden = false;
+}
 
 readFilters();
 checkSystem();
